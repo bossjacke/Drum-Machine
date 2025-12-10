@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drum Machine</title>
+    <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #drum-machine {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            min-width: 350px;
+        }
+
+        #display {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .power-button {
+            background: linear-gradient(145deg, #ff6b6b, #ee5a24);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .power-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(238, 90, 36, 0.6);
+        }
+
+        .power-button:active {
+            transform: scale(0.95);
+        }
+
+        .power-button.on {
+            background: linear-gradient(145deg, #51cf66, #37b24d);
+            box-shadow: 0 4px 15px rgba(55, 178, 77, 0.4);
+        }
+
+        .power-button.on:hover {
+            box-shadow: 0 6px 20px rgba(55, 178, 77, 0.6);
+        }
+
+        .power-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .power-button:active::before {
+            width: 100px;
+            height: 100px;
+        }
+
+        .drum-pads.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .drum-pad.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .drum-pads {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .drum-pad {
+            background: linear-gradient(145deg, #f0f0f0, #cacaca);
+            border: none;
+            border-radius: 15px;
+            padding: 25px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2), -5px -5px 15px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drum-pad:hover {
+            transform: translateY(-2px);
+            box-shadow: 7px 7px 20px rgba(0, 0, 0, 0.3), -7px -7px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .drum-pad:active {
+            transform: translateY(0);
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -2px -2px 5px rgba(255, 255, 255, 0.1);
+            background: linear-gradient(145deg, #e0e0e0, #b8b8b8);
+        }
+
+        .drum-pad::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .drum-pad:hover::before {
+            left: 100%;
+        }
+
+        .clip {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            #drum-machine {
+                padding: 20px;
+                min-width: 300px;
+            }
+            
+            .drum-pads {
+                gap: 10px;
+            }
+            
+            .drum-pad {
+                padding: 20px;
+                font-size: 1.5rem;
+            }
+            
+            #display {
+                font-size: 1.2rem;
+                padding: 12px;
+                min-height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const DrumMachine = () => {
+            const [display, setDisplay] = useState('');
+            const [isPowerOn, setIsPowerOn] = useState(false);
+
+            const drumPads = [
+                { key: 'Q', id: 'Heater-1', src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/Heater-1.mp3' },
+                { key: 'W', id: 'Heater-2', src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/Heater-2.mp3' },
+                { key: 'E', id: 'Heater-3', src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/Heater-3.mp3' },
+                { key: 'A', id: 'Heater-4', src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/Heater-4_1.mp3' },
+                { key: 'S', id: 'Clap', src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/Heater-6.mp3' },
+                { key: 'D', id: 'Open-HH', src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/Dsc_Oh.mp3' },
+                { key: 'Z', id: "Kick-n'-Hat", src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/Kick_n_Hat.mp3' },
+                { key: 'X', id: 'Kick', src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/RP4_KICK_1.mp3' },
+                { key: 'C', id: 'Closed-HH', src: 'https://cdn.freecodecamp.org/testable-projects-fcc/audio/Cev_H2.mp3' }
+            ];
+
+            const playSound = (key, id) => {
+                if (!isPowerOn) return;
+                const audio = document.getElementById(key);
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play();
+                    setDisplay(id);
+                }
+            };
+
+            const handlePadClick = (key, id) => {
+                playSound(key, id);
+            };
+
+            const togglePower = () => {
+                setIsPowerOn(!isPowerOn);
+                if (!isPowerOn) {
+                    setDisplay('POWER ON');
+                } else {
+                    setDisplay('POWER OFF');
+                }
+            };
+
+            useEffect(() => {
+                const handleKeyPress = (event) => {
+                    const key = event.key.toUpperCase();
+                    const pad = drumPads.find(p => p.key === key);
+                    if (pad) {
+                        playSound(pad.key, pad.id);
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyPress);
+                return () => {
+                    window.removeEventListener('keydown', handleKeyPress);
+                };
+            }, []);
+
+            return (
+                <div id="drum-machine">
+                    <button 
+                        className={`power-button ${isPowerOn ? 'on' : ''}`}
+                        onClick={togglePower}
+                    >
+                        {isPowerOn ? 'ON' : 'OFF'}
+                    </button>
+                    <div id="display">{display}</div>
+                    <div className={`drum-pads ${!isPowerOn ? 'disabled' : ''}`}>
+                        {drumPads.map((pad) => (
+                            <div
+                                key={pad.key}
+                                className={`drum-pad ${!isPowerOn ? 'disabled' : ''}`}
+                                id={pad.id}
+                                onClick={() => handlePadClick(pad.key, pad.id)}
+                            >
+                                {pad.key}
+                                <audio
+                                    className="clip"
+                                    id={pad.key}
+                                    src={pad.src}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            return (
+                <div className="App">
+                    <DrumMachine />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
